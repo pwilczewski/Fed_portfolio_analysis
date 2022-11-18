@@ -8,6 +8,7 @@ Created on Fri Nov 18 09:59:42 2022
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import QuantLib as ql
 
 def exploratory_plots(mbs_data):
   for v in ['note_rate', 'wam']:
@@ -96,3 +97,29 @@ def plot_runoff(cf, title_label):
   plt.show()
   
 
+class TreasuryParCurve():
+  def __init__(self, maturities, rates, asof_date):
+
+    convention = ql.Unadjusted
+    day_count = ql.ActualActual(ql.ActualActual.Bond)
+    ql.Settings.instance().evaluationDate = asof_date
+    self.asof_date = asof_date
+
+    bonds = []
+    for r, m in zip(rates, maturities):
+      # ql.Schedule(effectiveDate, terminationDate, tenor, calendar, convention, terminationDateConvention, rule, endOfMonth)
+      schedule = ql.Schedule(asof_date, asof_date + m, ql.Period(ql.Semiannual), ql.UnitedStates(), convention, convention, ql.DateGeneration.Backward, True)
+      # ql.FixedRateBondHelper(price, settlementDays, faceAmount, schedule, coupons, dayCounter, paymentConv=Following)
+      helper_base = ql.FixedRateBondHelper(ql.QuoteHandle(ql.SimpleQuote(100)), 0, 100.0, schedule, [r/100.0], day_count, convention,)
+      bonds.append(helper_base)
+
+    self.treasury_curve = ql.PiecewiseLogCubicDiscount(asof_date, bonds, day_count)
+
+  def calculate_df(self, period_range):
+    return [self.treasury_curve.discount(self.asof_date+ql.Period(m, ql.Months)) for m in period_range]
+
+  def fwd_rates(self, period_range):
+    asof_date = self.asof_date
+    fwd_dates = [asof_date+ql.Period(m, ql.Months) for m in period_range]
+    fwd_rates = [self.treasury_curve.forwardRate(d, d+ql.Period(1,ql.Months), ql.ActualActual(ql.ActualActual.Bond), ql.Simple).rate() for d in fwd_dates]
+    return fwd_rates
