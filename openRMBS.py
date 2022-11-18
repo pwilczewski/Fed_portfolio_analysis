@@ -123,3 +123,60 @@ class TreasuryParCurve():
     fwd_dates = [asof_date+ql.Period(m, ql.Months) for m in period_range]
     fwd_rates = [self.treasury_curve.forwardRate(d, d+ql.Period(1,ql.Months), ql.ActualActual(ql.ActualActual.Bond), ql.Simple).rate() for d in fwd_dates]
     return fwd_rates
+
+def static_pricing(mbs_data, cpr, discount_factors):
+
+  prices = []
+
+  for i in range(len(mbs_data)):
+    loan = mbs_data.iloc[i]
+    note_rate = loan['note_rate']/1200
+    coupon = loan['coupon']/1200
+    term = loan['term'].astype(int)
+    age = loan['age'].astype(int)
+    initial_bal = loan['curr_bal']
+
+    smmfactors = np.power(1-cpr/1200,range(1,term-age+1))
+    amfactors = ((1+note_rate)**term - (1+note_rate)**(range(age+1,term+1)))/((1+note_rate)**term - 1)
+    initial_amfactor = ((1+note_rate)**term - (1+note_rate)**age)/((1+note_rate)**term - 1)
+    amfactors = smmfactors*amfactors/initial_amfactor
+    amfactors = np.insert(amfactors,0,1)
+    balance = initial_bal*amfactors
+    int_pymts = balance[0:-1]*coupon
+    prin_pymts = balance[0:-1] - balance[1:]
+
+    price = 100*np.sum(discount_factors[0:term-age]*(int_pymts + prin_pymts))/initial_bal
+    prices.append(price)
+
+  price_frame = pd.DataFrame({"price": prices, "balance": mbs_data['curr_bal']})
+  return price_frame
+
+def static_gap(mbs_data, cpr, funding_rates):
+
+  gap_forecast = pd.DataFrame({"t": range(0,max(mbs_data['wam'].astype(int)+1)),
+                          "int_received": 0, "funding_paid": 0})
+
+  for i in range(len(mbs_data)):
+    loan = mbs_data.iloc[i]
+    note_rate = loan['note_rate']/1200
+    coupon = loan['coupon']/1200
+    term = loan['term'].astype(int)
+    age = loan['age'].astype(int)
+    initial_bal = loan['curr_bal']
+
+    smmfactors = np.power(1-cpr/1200,range(1,term-age+1))
+    amfactors = ((1+note_rate)**term - (1+note_rate)**(range(age+1,term+1)))/((1+note_rate)**term - 1)
+    initial_amfactor = ((1+note_rate)**term - (1+note_rate)**age)/((1+note_rate)**term - 1)
+    amfactors = smmfactors*amfactors/initial_amfactor
+    amfactors = np.insert(amfactors,0,1)
+    balance = initial_bal*amfactors
+    int_pymts = balance[0:-1]*coupon
+    funding_paid = -balance[0:-1]*funding_rates[0:term-age]/12
+
+    gap_forecast['int_received'] += np.pad(int_pymts,(1,360-term+age),constant_values=0)
+    gap_forecast['funding_paid'] += np.pad(funding_paid,(1,360-term+age),constant_values=0)
+
+  gap_forecast['gap'] = gap_forecast['int_received'] + gap_forecast['funding_paid']
+  gap_forecast['rolling_gap'] = gap_forecast['gap'].rolling(12).mean()
+  return gap_forecast[1:]
+
