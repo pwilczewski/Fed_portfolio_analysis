@@ -117,7 +117,6 @@ def static_gap(mbs_data, cpr, funding_rates):
     gap_forecast['funding_paid'] += np.pad(funding_paid,(1,360-term+age),constant_values=0)
 
   gap_forecast['gap'] = gap_forecast['int_received'] + gap_forecast['funding_paid']
-  gap_forecast['rolling_gap'] = gap_forecast['gap'].rolling(12).mean()
   return gap_forecast[1:]
 
 def exploratory_plots(mbs_data):
@@ -239,21 +238,20 @@ def plot_durations(mbs_prices, duration):
   plt.show()
   
 def plot_gap(interest_gap, asof_date):
-  asof_date = np.datetime64('2022-10')
-
   print("\n")
   print("Cumulative income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
   print("\n")
 
-  annual_period = interest_gap['t'][11::12]/12
   annual_gap = interest_gap.rolling(12).sum()[11::12]
+  annual_period = [y for y in range(1,31)]
 
   fig, ax = plt.subplots(figsize=(13,8))
   ax.bar(annual_period,annual_gap['int_received'])
   ax.bar(annual_period,annual_gap['funding_paid'])
   ax.plot(annual_period,annual_gap['gap'], color='C3')
   ax.axhline(lw=1, color='black')
-  ax.set_title("Interest rate gap forecast")
+  ax.set_xticklabels([asof_date + np.timedelta64(y, 'Y') for y in range(1,31)])
+  ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
   ax.set_ylabel("Interest gap")
   plt.show()
