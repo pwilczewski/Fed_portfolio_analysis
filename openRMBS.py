@@ -262,5 +262,6 @@ def plot_gap(interest_gap, asof_date):
   ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
   ax.set_ylabel("Interest gap ($B)")
+  ax.legend(["Income received", "Interest paid", "Net income"])
   plt.show()
   
