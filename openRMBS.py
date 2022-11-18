@@ -132,6 +132,18 @@ def exploratory_plots(mbs_data):
     plt.show()
 
 
+def data_summary(mbs_data):
+    data_summary = pd.DataFrame([str(len(mbs_data)),
+                              str("${:,.2f}".format(sum(mbs_data['curr_bal'])/10**12)) + "T",
+                              str(round(100*sum(mbs_data['curr_bal'])/(2.69*10**12),2))], 
+                            index=['# of CUSIPs in sample','Sample balance','Percent of total'])
+    
+    print("\n")
+    print(data_summary.to_string(header=False))
+    print("\n")
+    mbs_data[['note_rate','coupon','age','wam','term','curr_bal']].describe()
+
+
 def plot_balances(cf, title_label):
   runoff_50pct = months_to_runoff(cf, 0.5)
   runoff_75pct = months_to_runoff(cf, 0.25)
