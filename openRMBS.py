@@ -156,12 +156,10 @@ def plot_fwd_rates(fwd_rates, asof_date):
   plt.ylabel("Rate (%)")
   plt.show()
 
-def plot_balances(cf, title_label):
+def plot_balances(cf, title_label, asof_date):
   runoff_50pct = months_to_runoff(cf, 0.5)
   runoff_75pct = months_to_runoff(cf, 0.25)
   runoff_95pct = months_to_runoff(cf, 0.05)
-
-  asof_date = np.datetime64('2022-10')
 
   print("\n")
   print("Months to 50% runoff: ", runoff_50pct)
@@ -173,7 +171,7 @@ def plot_balances(cf, title_label):
   fig, ax = plt.subplots()
   bal_forecast = cf['Balance']/0.95
   bal_forecast.plot(figsize=(13,8),kind='bar',xticks=np.arange(0,361,60),rot=0,width=1)
-  ax.set_xticklabels([asof_date+np.timedelta64(m,'M') for m in np.arange(0,361,60)])
+  ax.set_xticklabels([str(asof_date + ql.Period(m, ql.Months)) for m in np.arange(0,361,60)])
   plt.title(title_label)
   plt.xlabel("Forecast date")
   plt.ylabel("Balance remaining ($)")
@@ -239,9 +237,10 @@ def plot_durations(mbs_prices, duration):
   
 def plot_gap(interest_gap, asof_date):
   print("\n")
-  print("Cumulative income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
+  print("Cumulative net income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
   print("\n")
 
+  #asof_date = np.datetime64(asof_date)
   annual_gap = interest_gap.rolling(12).sum()[11::12]
   annual_period = [y for y in range(1,31)]
 
@@ -250,7 +249,7 @@ def plot_gap(interest_gap, asof_date):
   ax.bar(annual_period,annual_gap['funding_paid'])
   ax.plot(annual_period,annual_gap['gap'], color='C3')
   ax.axhline(lw=1, color='black')
-  ax.set_xticklabels([asof_date + np.timedelta64(y, 'Y') for y in range(1,31)])
+  ax.set_xticklabels([str(asof_date + ql.Period(y, ql.Years)) for y in range(1,31)])
   ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
   ax.set_ylabel("Interest gap")
