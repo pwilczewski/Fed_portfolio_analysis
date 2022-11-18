@@ -239,18 +239,22 @@ def plot_durations(mbs_prices, duration):
   plt.show()
   
 def plot_gap(interest_gap, asof_date):
-  max_gap = np.min(interest_gap['gap'])
-  max_at = interest_gap[interest_gap['gap']==max_gap].iloc[0]['t'].astype(int)
+  asof_date = np.datetime64('2022-10')
 
   print("\n")
-  print("Cumulative income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9/0.95,1), "billion")
-  print("Maximum gap: ", round(max_gap/10**9/0.95,1), "billion")
-  print("Maximum at: ", asof_date + np.timedelta64(max_at,'M'))
+  print("Cumulative income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
   print("\n")
 
-  interest_gap[['int_received','funding_paid','gap']].plot(figsize=(13,8))
-  plt.axhline(lw=1, color='black')
-  plt.title("Interest rate gap forecast")
-  plt.xlabel("Period")
-  plt.ylabel("Interest gap")
+  annual_period = interest_gap['t'][11::12]/12
+  annual_gap = interest_gap.rolling(12).sum()[11::12]
+
+  fig, ax = plt.subplots(figsize=(13,8))
+  ax.bar(annual_period,annual_gap['int_received'])
+  ax.bar(annual_period,annual_gap['funding_paid'])
+  ax.plot(annual_period,annual_gap['gap'], color='C3')
+  ax.axhline(lw=1, color='black')
+  ax.set_title("Interest rate gap forecast")
+  ax.set_xlabel("Period")
+  ax.set_ylabel("Interest gap")
   plt.show()
+  
