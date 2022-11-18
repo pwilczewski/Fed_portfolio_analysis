@@ -160,12 +160,14 @@ def plot_balances(cf, title_label, asof_date):
   runoff_50pct = months_to_runoff(cf, 0.5)
   runoff_75pct = months_to_runoff(cf, 0.25)
   runoff_95pct = months_to_runoff(cf, 0.05)
+  
+  date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
   print("\n")
   print("Months to 50% runoff: ", runoff_50pct)
   print("Months to 95% runoff: ", runoff_95pct)
-  print("Date of 50% runoff: ", asof_date + ql.Period(runoff_50pct,ql.Months))
-  print("Date of 95% runoff: ", asof_date + ql.Period(runoff_95pct,ql.Months))
+  print("Date of 50% runoff: ", date_label + np.timedelta64(runoff_50pct,'M'))
+  print("Date of 95% runoff: ", date_label + np.timedelta64(runoff_95pct,'M'))
   print("\n")
   
   date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
