@@ -120,7 +120,6 @@ def static_gap(mbs_data, cpr, funding_rates):
   gap_forecast['rolling_gap'] = gap_forecast['gap'].rolling(12).mean()
   return gap_forecast[1:]
 
-
 def exploratory_plots(mbs_data):
   for v in ['note_rate', 'wam']:
     mbs_data[v].hist(weights=mbs_data['curr_bal'],figsize=(8,5))
@@ -141,8 +140,22 @@ def data_summary(mbs_data):
     print("\n")
     print(data_summary.to_string(header=False))
     print("\n")
-    print(mbs_data[['note_rate','coupon','age','wam','term','curr_bal']].describe())
+    print(mbs_data[['note_rate','coupon','age','term','curr_bal']].describe())
 
+def plot_par_rates(term_points, rates, asof_date):
+  yield_curve = pd.DataFrame({"Term": term_points, "Rate": rates})
+  yield_curve.plot(x="Term", y="Rate",figsize=(8,5))
+  plt.title("Treasury par yield curve as-of " + str(asof_date))
+  plt.ylabel("Rate (%)")
+  plt.show()
+  
+def plot_fwd_rates(fwd_rates, asof_date):
+  fwd_frame = 100*pd.DataFrame({"Forward rates": fwd_rates})
+  fwd_frame.plot(figsize=(8,5))
+  plt.title("1-month forward rates as-of " + str(asof_date))
+  plt.xlabel("Period")
+  plt.ylabel("Rate (%)")
+  plt.show()
 
 def plot_balances(cf, title_label):
   runoff_50pct = months_to_runoff(cf, 0.5)
@@ -188,4 +201,56 @@ def plot_runoff(cf, title_label):
   plt.xlabel("Forecast date")
   plt.ylabel("Monthly runoff ($)")
   plt.legend(["Principal repayment"])
+  plt.show()
+  
+def analysis_summary(mbs_prices):
+  wavg_price = np.sum(mbs_prices['price']*mbs_prices['balance'])/np.sum(mbs_prices['balance'])
+  total_bal = sum(mbs_prices['balance'])/0.95
+
+  outframe = pd.DataFrame([str(np.round(wavg_price,2)), 
+                         "$" + str(np.round(total_bal/10**9,1))+"B",
+                         "$" + str(np.round(wavg_price/100*total_bal/10**9,1))+"B",
+                         "$" + str(np.round((wavg_price/100-1)*total_bal/10**9,1))+"B"],
+                        index=['Average price', 'Balance outstanding', 'Estimated value', 'Capital shortfall'])
+
+  print("\n")
+  print(outframe.to_string(header=False))
+  print("\n")
+
+  mbs_prices['price'].hist(weights=mbs_prices['balance'],figsize=(8,5))
+  plt.xlabel("Price")
+  plt.ylabel("Balance")
+  plt.title("Distribution of RMBS prices")
+  plt.show()
+  
+def plot_durations(mbs_prices, duration):
+  wavg_duration = np.sum(mbs_prices['balance']*duration)/np.sum(mbs_prices['balance'])
+  portfolio_duration = wavg_duration*np.sum(mbs_prices['balance']*mbs_prices['price']/100)/10000
+
+  print("\n")
+  print("Average duration: \t", np.round(wavg_duration,2))
+  print('Portfolio DV01: \t', "$" + str(np.round(portfolio_duration/10**9,2)) + "B")
+  print("\n")
+
+  duration.hist(weights=mbs_prices['balance'], figsize=(8,5))
+  plt.xlabel("Duration")
+  plt.ylabel("Balance")
+  plt.title("Distribution of portfolio duration")
+  plt.show()
+  
+def plot_gap(interest_gap, asof_date):
+  max_gap = np.min(interest_gap['gap'])
+  max_at = interest_gap[interest_gap['gap']==max_gap].iloc[0]['t'].astype(int)
+
+  print("\n")
+  print("Cumulative income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9/0.95,1), "billion")
+  print("Maximum gap: ", round(max_gap/10**9/0.95,1), "billion")
+  print("Maximum at: ", asof_date + np.timedelta64(max_at,'M'))
+  print("\n")
+
+  interest_gap[['int_received','funding_paid','gap']].plot(figsize=(13,8))
+  plt.axhline(lw=1, color='black')
+  plt.title("Interest rate gap forecast")
+  plt.xlabel("Period")
+  plt.ylabel("Interest gap")
   plt.show()
