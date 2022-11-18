@@ -181,9 +181,8 @@ def plot_balances(cf, title_label, asof_date):
   plt.show()
 
 
-def plot_runoff(cf, title_label):
+def plot_runoff(cf, title_label, asof_date):
 
-  asof_date = np.datetime64('2022-10')
   runoff_forecast = cf.loc[1:,'prin_pymts']/0.95
 
   print("\n")
@@ -193,7 +192,7 @@ def plot_runoff(cf, title_label):
 
   fig, ax = plt.subplots()
   runoff_forecast.plot(figsize=(13,8),kind='line',xticks=np.arange(0,361,60))
-  ax.set_xticklabels([asof_date+np.timedelta64(m,'M') for m in np.arange(0,361,60)])
+  ax.set_xticklabels([str(asof_date + ql.Period(m, ql.Months)) for m in np.arange(0,361,60)])
   plt.title(title_label)
   plt.xlabel("Forecast date")
   plt.ylabel("Monthly runoff ($)")
@@ -240,7 +239,6 @@ def plot_gap(interest_gap, asof_date):
   print("Cumulative net income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
   print("\n")
 
-  #asof_date = np.datetime64(asof_date)
   annual_gap = interest_gap.rolling(12).sum()[11::12]
   annual_period = [y for y in range(1,31)]
 
