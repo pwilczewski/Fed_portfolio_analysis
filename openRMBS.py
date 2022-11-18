@@ -252,9 +252,9 @@ def plot_gap(interest_gap, asof_date):
   date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
   fig, ax = plt.subplots(figsize=(13,8))
-  ax.bar(annual_period,annual_gap['int_received'])
-  ax.bar(annual_period,annual_gap['funding_paid'])
-  ax.plot(annual_period,annual_gap['gap'], color='C3')
+  ax.bar(annual_period,annual_gap['int_received'],label="Income received")
+  ax.bar(annual_period,annual_gap['funding_paid'],label="Interest paid")
+  ax.plot(annual_period,annual_gap['gap'], color='C3',label="Net income")
   ax.axhline(lw=1, color='black')
   ax.set_xticks(annual_period[::4])
   ax.set_xticklabels([date_label + np.timedelta64(y,'Y') for y in annual_period[::4]])
@@ -262,6 +262,6 @@ def plot_gap(interest_gap, asof_date):
   ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
   ax.set_ylabel("Interest gap ($B)")
-  ax.legend(["Income received", "Interest paid", "Net income"])
+  plt.legend()
   plt.show()
   
