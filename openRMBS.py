@@ -246,7 +246,7 @@ def plot_gap(interest_gap, asof_date):
   print("\n")
 
   annual_gap = interest_gap.rolling(12).sum()[11::12]*1e-9
-  annual_period = [y for y in range(1,31)]
+  annual_period = [y for y in range(0,30)]
   date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
   fig, ax = plt.subplots(figsize=(13,8))
@@ -254,7 +254,8 @@ def plot_gap(interest_gap, asof_date):
   ax.bar(annual_period,annual_gap['funding_paid'])
   ax.plot(annual_period,annual_gap['gap'], color='C3')
   ax.axhline(lw=1, color='black')
-  ax.set_xticklabels([date_label + np.timedelta64(y*12,'M') for y in range(1,31)])
+  ax.set_xticks(annual_period[::4])
+  ax.set_xticklabels([date_label + np.timedelta64(y,'Y') for y in annual_period[::4]])
   ax.ticklabel_format(style='plain',axis='y')
   ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
