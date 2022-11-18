@@ -229,11 +229,12 @@ def plot_durations(mbs_prices, duration):
 
   print("\n")
   print("Average duration: \t", np.round(wavg_duration,2))
-  print('Portfolio DV01: \t', "$" + str(np.round(portfolio_duration/10**9,2)) + "B")
+  print('Portfolio DV01: \t', "$" + str(np.round(portfolio_duration*1e-9,2)) + "B")
   print("\n")
 
-  duration.hist(weights=mbs_prices['balance'], figsize=(8,5))
+  duration.hist(weights=mbs_prices['balance']*1e-9, figsize=(8,5))
   plt.xlabel("Duration")
+  plt.ticklabel_format(style='plain',axis='y')
   plt.ylabel("Balance")
   plt.title("Distribution of portfolio duration")
   plt.show()
@@ -243,7 +244,7 @@ def plot_gap(interest_gap, asof_date):
   print("Cumulative net income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
   print("\n")
 
-  annual_gap = interest_gap.rolling(12).sum()[11::12]
+  annual_gap = interest_gap.rolling(12).sum()[11::12]*1e-9
   annual_period = [y for y in range(1,31)]
   date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
@@ -253,6 +254,7 @@ def plot_gap(interest_gap, asof_date):
   ax.plot(annual_period,annual_gap['gap'], color='C3')
   ax.axhline(lw=1, color='black')
   ax.set_xticklabels([date_label + np.timedelta64(y*12,'M') for y in range(1,31)])
+  ax.ticklabel_format(style='plain',axis='y')
   ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
   ax.set_ylabel("Interest gap")
