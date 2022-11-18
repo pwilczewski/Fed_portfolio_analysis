@@ -141,7 +141,7 @@ def data_summary(mbs_data):
     print("\n")
     print(data_summary.to_string(header=False))
     print("\n")
-    mbs_data[['note_rate','coupon','age','wam','term','curr_bal']].describe()
+    print(mbs_data[['note_rate','coupon','age','wam','term','curr_bal']].describe())
 
 
 def plot_balances(cf, title_label):
