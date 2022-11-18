@@ -132,7 +132,7 @@ def exploratory_plots(mbs_data):
 
 def data_summary(mbs_data):
     data_summary = pd.DataFrame([str(len(mbs_data)),
-                              str("${:,.2f}".format(sum(mbs_data['curr_bal'])/10**12)) + "T",
+                              str("${:,.2f}".format(sum(mbs_data['curr_bal'])*1e-12)) + "T",
                               str(round(100*sum(mbs_data['curr_bal'])/(2.69*10**12),2))], 
                             index=['# of CUSIPs in sample','Sample balance','Percent of total'])
     
@@ -185,11 +185,11 @@ def plot_balances(cf, title_label, asof_date):
 
 def plot_runoff(cf, title_label, asof_date):
 
-  runoff_forecast = cf.loc[1:,'prin_pymts']/0.95
+  runoff_forecast = cf.loc[1:,'prin_pymts']/0.95*1e-9
 
   print("\n")
-  print("1-year average runoff: ", np.round(np.average(runoff_forecast[0:12]/1000000000),2), "billion")
-  print("5-year average runoff: ", np.round(np.average(runoff_forecast[0:60]/1000000000),2), "billion")
+  print("1-year average runoff: ", np.round(np.average(runoff_forecast[0:12]),2), "billion")
+  print("5-year average runoff: ", np.round(np.average(runoff_forecast[0:60]),2), "billion")
   print("\n")
   
   date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
@@ -199,27 +199,28 @@ def plot_runoff(cf, title_label, asof_date):
   ax.set_xticklabels([date_label + np.timedelta64(m,'M') for m in np.arange(0,361,60)])
   plt.title(title_label)
   plt.xlabel("Forecast date")
-  plt.ylabel("Monthly runoff ($)")
+  plt.ylabel("Monthly runoff (billions)")
   plt.legend(["Principal repayment"])
   plt.show()
   
 def analysis_summary(mbs_prices):
-  wavg_price = np.sum(mbs_prices['price']*mbs_prices['balance'])/np.sum(mbs_prices['balance'])
+  wavg_price = np.sum(mbs_prices['price']*mbs_prices['balance'])/np.sum(mbs_prices['balance'])*1e-9
   total_bal = sum(mbs_prices['balance'])/0.95
 
   outframe = pd.DataFrame([str(np.round(wavg_price,2)), 
-                         "$" + str(np.round(total_bal/10**9,1))+"B",
-                         "$" + str(np.round(wavg_price/100*total_bal/10**9,1))+"B",
-                         "$" + str(np.round((wavg_price/100-1)*total_bal/10**9,1))+"B"],
+                         "$" + str(np.round(total_bal,1))+"B",
+                         "$" + str(np.round(wavg_price/100*total_bal,1))+"B",
+                         "$" + str(np.round((wavg_price/100-1)*total_bal,1))+"B"],
                         index=['Average price', 'Balance outstanding', 'Estimated value', 'Capital shortfall'])
 
   print("\n")
   print(outframe.to_string(header=False))
   print("\n")
 
-  mbs_prices['price'].hist(weights=mbs_prices['balance'],figsize=(8,5))
+  mbs_prices['price'].hist(weights=mbs_prices['balance']*1e-9,figsize=(8,5))
   plt.xlabel("Price")
-  plt.ylabel("Balance")
+  plt.ticklabel_format(style='plain',axis='y')
+  plt.ylabel("Balance (billions)")
   plt.title("Distribution of RMBS prices")
   plt.show()
   
@@ -235,13 +236,13 @@ def plot_durations(mbs_prices, duration):
   duration.hist(weights=mbs_prices['balance']*1e-9, figsize=(8,5))
   plt.xlabel("Duration")
   plt.ticklabel_format(style='plain',axis='y')
-  plt.ylabel("Balance")
+  plt.ylabel("Balance (billions)")
   plt.title("Distribution of portfolio duration")
   plt.show()
   
 def plot_gap(interest_gap, asof_date):
   print("\n")
-  print("Cumulative net income: ", round(interest_gap['gap'].cumsum().iloc[-1]/10**9,1), "billion")
+  print("Cumulative net income: ", round(interest_gap['gap'].cumsum().iloc[-1]*1e-9,1), "billion")
   print("\n")
 
   annual_gap = interest_gap.rolling(12).sum()[11::12]*1e-9
