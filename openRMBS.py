@@ -168,12 +168,12 @@ def plot_balances(cf, title_label, asof_date):
   print("Date of 95% runoff: ", asof_date + ql.Period(runoff_95pct,ql.Months))
   print("\n")
   
-  asof_date = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
+  date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
   fig, ax = plt.subplots()
   bal_forecast = cf['Balance']/0.95
   bal_forecast.plot(figsize=(13,8),kind='bar',xticks=np.arange(0,361,60),rot=0,width=1)
-  ax.set_xticklabels([asof_date + np.timedelta64(m,'M') for m in np.arange(0,361,60)])
+  ax.set_xticklabels([date_label + np.timedelta64(m,'M') for m in np.arange(0,361,60)])
   plt.title(title_label)
   plt.xlabel("Forecast date")
   plt.ylabel("Balance remaining ($)")
@@ -192,11 +192,11 @@ def plot_runoff(cf, title_label, asof_date):
   print("5-year average runoff: ", np.round(np.average(runoff_forecast[0:60]/1000000000),2), "billion")
   print("\n")
   
-  asof_date = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
+  date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
   fig, ax = plt.subplots()
   runoff_forecast.plot(figsize=(13,8),kind='line',xticks=np.arange(0,361,60))
-  ax.set_xticklabels([asof_date + np.timedelta64(m,'M') for m in np.arange(0,361,60)])
+  ax.set_xticklabels([date_label + np.timedelta64(m,'M') for m in np.arange(0,361,60)])
   plt.title(title_label)
   plt.xlabel("Forecast date")
   plt.ylabel("Monthly runoff ($)")
@@ -245,14 +245,14 @@ def plot_gap(interest_gap, asof_date):
 
   annual_gap = interest_gap.rolling(12).sum()[11::12]
   annual_period = [y for y in range(1,31)]
-  asof_date = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
+  date_label = np.datetime64(str(asof_date.year()) + "-" + str(asof_date.month()))
 
   fig, ax = plt.subplots(figsize=(13,8))
   ax.bar(annual_period,annual_gap['int_received'])
   ax.bar(annual_period,annual_gap['funding_paid'])
   ax.plot(annual_period,annual_gap['gap'], color='C3')
   ax.axhline(lw=1, color='black')
-  ax.set_xticklabels([asof_date + np.timedelta64(y,'Y') for y in range(1,31)])
+  ax.set_xticklabels([date_label + np.timedelta64(y,'Y') for y in range(1,31)])
   ax.set_title("Annual interest rate gap")
   ax.set_xlabel("Period")
   ax.set_ylabel("Interest gap")
