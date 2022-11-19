@@ -243,8 +243,11 @@ def plot_durations(mbs_prices, duration):
   plt.show()
   
 def plot_gap(interest_gap, asof_date):
+    
+  cumulative_gap = interest_gap['gap'].cumsum()*1e-9
   print("\n")
-  print("Cumulative net income: ", round(interest_gap['gap'].cumsum().iloc[-1]*1e-9,1), "billion")
+  print("1-year ahead net income:\t", round(cumulative_gap.iloc[11],1), "billion")
+  print("Cumulative net income:\t", round(cumulative_gap.iloc[-1],1), "billion")
   print("\n")
 
   annual_gap = interest_gap.rolling(12).sum()[11::12]*1e-9
